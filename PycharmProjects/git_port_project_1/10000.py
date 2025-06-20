@@ -1,5 +1,6 @@
 # Text based 10,000 dice game, where num of npc opponents can be chosen,
 # rolls are random, and player can select die or dice to keep/ re-roll
+import time
 
 def show_title():
     #display a title/header
@@ -15,5 +16,9 @@ def show_title():
     |     OOOOO                   OOO           /                 OOO                              OOO                             OOO           |
     ---------------------------------------------------------------------------------------------------------------------------------------------------
     """)
+    time.sleep(2)
+    print("""Welcome to a text based game of 10,000!
+    Lets get started!""")
+
 
 show_title()
