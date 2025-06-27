@@ -4,17 +4,17 @@ import time, random
 
 def show_title():
     # display a title/header
-    # I noticed this lines up perfectly in my code editor but mis-aligned when viewed on gitHub
-    print("""
-    ---------------------------------------------------------------------------------------------------------------------------------------------------
-    |           O                         OOO                             OOO                              OOO                             OOO           |
-    |        OO                      O         O                       O         O                        O         O                       O         O        |
-    |     O   O                   O               O                 O               O                  O               O                 O               O     |
-    |           O                   O               O                 O               O                  O               O                 O               O     |
-    |           O                   O               O                 O               O                  O               O                 O               O     |
-    |           O                      O         O          /            O         O                        O         O                       O         O        |
-    |     OOOOO                   OOO           /                 OOO                              OOO                             OOO           |
-    ---------------------------------------------------------------------------------------------------------------------------------------------------
+    # I noticed this lines up perfectly in my code editor but mis-aligned when viewed on gitHub or ran on bash. tried very hard to fix this issue
+    print("""\
+---------------------------------------------------------------------------------------------------------------------------------------------------
+|          O                          OOO                             OOO                              OOO                             OOO           |
+|        OO                      O         O                       O         O                        O         O                       O         O        |
+|     O   O                   O               O                 O               O                  O               O                 O               O     |
+|           O                   O               O                 O               O                  O               O                 O               O     |
+|           O                   O               O                 O               O                  O               O                 O               O     |
+|           O                      O         O          /            O         O                        O         O                       O         O        |
+|     OOOOO                   OOO           /                 OOO                              OOO                             OOO           |
+---------------------------------------------------------------------------------------------------------------------------------------------------\
     """)
     time.sleep(2)
     print("""Welcome to a text based game of 10,000!
@@ -33,6 +33,7 @@ def handle_player_and_opponent_assignment():
     try_again = True
     valid_player_name = False
     while try_again:
+        time.sleep(2)
         num_of_opponents = input("Enter how many opponents you'd like to face. (1-5): ")
         if num_of_opponents == "1" or num_of_opponents == "2" or num_of_opponents == "3"\
             or num_of_opponents == "4" or num_of_opponents == "5":
@@ -53,7 +54,6 @@ def handle_player_and_opponent_assignment():
                     name = random.choice(opponent_name_choices)
                 opponent_names.append(name)
 
-            time.sleep(1)
             print(f"You will face {num_of_opponents} opponents and their names are:")
             time.sleep(1)
             for name in opponent_names:
@@ -123,10 +123,8 @@ player_order = []
 def turn_deciding_roll():
     # this section handles assigning who will play first
     print("Alright! Lets roll to see who goes first!")
-    time.sleep(1)
-    roll = []
+    time.sleep(2)
     players_to_reroll = []
-    first_roll = True
     tied = True
     for player in all_players_names:
         players_to_reroll.append(player)
@@ -149,12 +147,12 @@ def turn_deciding_roll():
             else:
                 num_display += str(i + 1) + "                                 "
         print(num_display)
-        time.sleep(1)
+        time.sleep(2)
 
         # prints who is associated to each die
         for i in range(len(players_to_reroll)):
             print(f"Die {i + 1} : {players_to_reroll[i]}")
-            time.sleep(.5)
+            time.sleep(.8)
     #
         # check to see if there were any ties in the starting roll
         highest_roll = max(roll)
@@ -177,7 +175,7 @@ def turn_deciding_roll():
         else:
             # get high roller indexes to roll again
             #make a secondary llst so i can clear the original one to loop through  easier?
-            time.sleep(.5)
+            time.sleep(1)
             print("Tie-Breaker!")
             players_to_reroll_2 = []
             index = 0
@@ -213,8 +211,8 @@ class Player():
         self.name = name
         self.roll = []
         self.current_score = 0
-        self.total_score = 9000
-        self.on_board = True
+        self.total_score = 0
+        self.on_board = False
         self.turn_order = 0
         self.dice_to_roll = 6
         self.combo_options = []
@@ -230,33 +228,27 @@ class Player():
         self.used_dice = []
         self.unused_dice = []
 
+        #display the players turn their total score and  how much they need to win
         if player_turn == self.turn_order and self.turn_just_changed:
-            print(f"It's {self.name}'s turn, they currently have {self.total_score} Points")
+            print(f"It's {self.name}'s turn, they currently have {self.total_score} Points and need {10000 - self.total_score} Points to win")
             self.turn_just_changed = False
             time.sleep(1)
 
+        #rolls the dice for normal gameplay
         for i in range(self.dice_to_roll):
             die_num = random.randint(1, 6)
             self.roll.append(die_num)
-
+        #draws the dice on screen for each roll
         for lines in zip(*[dice[r - 1] for r in self.roll]):
             print("          ".join(lines))
 
-        if self.name == players_name:
-            num_display = "           "
-            for i in range(self.dice_to_roll):
-                # conditional here to fix an offset issue with dice 3-6's display numbers
-                if i <= 2:
-                    num_display += str(i + 1) + "                                "
-                else:
-                    num_display += str(i + 1) + "                                 "
-            print(num_display)
         time.sleep(1)
 
         self.score_combos()
         time.sleep(1)
         self.take_roll_score()
-        self.stay()
+        if self.name != players_name:
+            self.stay()
 
     def score_combos(self):
         #straight (1-6)
@@ -341,12 +333,80 @@ class Player():
                 player_turn = 1
             return
 
-        #handles user input
-        # if self.name == players_name:
-        #     pass
+        # handle user input
+        if self.name == players_name:
+            already_taken = set()
+            while True:
+                print("\nAvailable options:")
+                for i, option in enumerate(self.combo_options):
+                    print(f"{i + 1}: {option[0]} for {option[1]} points (uses {option[2]} dice)")
+
+                try:
+                    choice = input("Choose option(s) to keep (enter number(s), separated by comma): ").strip()
+                    indices = [int(x.strip()) - 1 for x in choice.split(',')]
+
+                    valid = all(0 <= idx < len(self.combo_options) for idx in indices)
+                    if not valid:
+                        print("One or more choices are invalid. Try again.")
+                        continue
+
+                    total_dice_used = 0
+                    for idx in indices:
+                        if idx in already_taken:
+                            print(f"Option {idx + 1} already used. Skipping.")
+                            continue
+                        selected = self.combo_options[idx]
+                        print(f"You chose to take: {selected[0]} for {selected[1]} points!")
+                        self.current_score += selected[1]
+                        self.dice_to_roll -= selected[2]
+                        total_dice_used += selected[2]
+                        already_taken.add(idx)
+
+                    break  # Exit combo selection loop
+
+                except ValueError:
+                    print("Please enter valid numbers separated by commas.")
+
+            # Ask if they want to stay or roll again
+            # Ask if they want to stay or roll again
+            while True:
+                print(f"\nYour current roll score: {self.current_score}")
+                print(f"You have {self.dice_to_roll} dice left.")
+                choice = input("Would you like to stay or roll again? (stay/roll or s/r): ").lower()
+
+                if choice in ("stay", "s"):
+                    # if player is not on the board yet
+                    if not self.on_board:
+                        if self.current_score >= 1000:
+                            print("You can now get on the board!")
+                            self.can_stay = True
+                            self.stay()
+                            return
+                        else:
+                            print("You need at least 1000 points in one turn to get on the board. Keep rolling!")
+                            continue  # don't exit the loop — re-prompt
+                    else:
+                        # player is already on board and chose to stay
+                        self.can_stay = True
+                        self.stay()
+                        return
+
+                elif choice in ("roll", "r"):
+                    if self.dice_to_roll == 0:
+                        print("All dice used — rolling 6 fresh dice.")
+                        self.dice_to_roll = 6
+                    self.roll_dice()
+                    return
+
+                else:
+                    print("Please type 'stay', 's', 'roll', or 'r'.")
+
+
 
         #handles ai decisions
         else:
+            #if opponent has a good combo that uses all 6 dice
+            #they will take this option
             for option in self.combo_options:
                 if option[2] == 6:
                     self.current_score += option[1]
@@ -354,9 +414,12 @@ class Player():
                     print(f"{self.name} is going to take a {self.combo_options[0][0]} for {self.combo_options[0][1]} Points")
                     break
 
+                #if the opponent has a combo for the highest roll that doesn't use all 6 dice but uses 3 or more
                 if option[0] == "Combo" and option[2] != 6:
+                    #checks 1-6 to see what combo exists
                     for i in range(6):
                         if self.used_dice[0] == i + 1:
+                            #if a combo isn't the only option there is a small chance that they won't take it
                             if len(self.combo_options) > 1:
                                 if random.randint(1, 10) <= 2 and self.used_dice[0] != 1:
                                     pass
@@ -366,21 +429,25 @@ class Player():
                                     print(f"{self.name} is going to take a {option[0]} for {option[1]} Points")
                                     if len(self.used_dice) == 3 and random.randint(1, 10) <= 8:
                                         break
+                            #if a combo is the only option they will take it
                             else:
                                 self.current_score += option[1]
                                 self.dice_to_roll -= option[2]
                                 print(f"{self.name} is going to take a {option[0]} for {option[1]} Points")
 
+                #if the player can take all remaining dice to keep rolling then they will
                 if "Take all remaining" in option[0]:
                     self.current_score += option[1]
                     self.dice_to_roll -= option[2]
                     print(f"{self.name} is going to {option[0]} for {option[1]} Points")
                     break
+                #if the player cant take all remaining then they will take ones if available
                 elif "Take ones" in option[0]:
                     self.current_score += option[1]
                     self.dice_to_roll -= option[2]
                     print(f"{self.name} is going to {option[0]} for {option[1]} Points")
                     break
+                #if no ones are available then they will take fives
                 elif "Take fives" in option[0]:
                     self.current_score += option[1]
                     self.dice_to_roll -= option[2]
@@ -391,6 +458,7 @@ class Player():
         if self.current_score + self.total_score == 10000:
             print(f"{self.name} Wins!!")
             run_game = False
+            return
         elif self.current_score + self.total_score > 10000:
             print(f"{self.name} Busted!\n")
             self.dice_to_roll = 6
@@ -407,14 +475,25 @@ class Player():
 
     def stay(self):
         global player_turn
+        #if someone has won the game, this prevents the rest of the stay method from execution
+        if run_game == False:
+            return
         self.can_stay = False
-        if not self.on_board:
+        #checks if the player has enough points to get on the board, if they do then they will stay
+        if not self.on_board and self.name != players_name:
             if self.current_score >= 1000:
                 self.can_stay = True
             else:
                 self.can_stay = False
+        elif not self.on_board and self.name == players_name:
+            if self.current_score >= 1000:
+                self.can_stay = True
+            else:
+                self.can_stay = False
+                print("You need 1000 points minimum to get on the board!")
 
-        else:
+        #if play is on the board and is not the user, there is an increasing chance they will stay based on how big their holding score is
+        elif self.on_board and self.name != players_name:
             if self.current_score >= 500 and self.current_score < 600:
                 if random.randint(1, 10) <= 5:
                     self.can_stay = True
@@ -431,6 +510,7 @@ class Player():
                 if random.randint(1, 10) <= 9:
                     self.can_stay = True
 
+        #if the player has taken their score, handles adding that score to the total, resetting a few variables and changing the players turn
         if self.can_stay:
             self.total_score += self.current_score
             print(f"{self.name} is going to stay with {self.current_score} and now has {self.total_score} Points\n")
